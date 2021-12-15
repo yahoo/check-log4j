@@ -69,7 +69,7 @@ sits there as an unused dependency or what.
 ## This doesn't work on my system, explodes in some way, or doesn't correctly detect a vulnerable host!
 
 I'm sorry.  Please let me know about this via
-[email](mailto:jschauma@netmeister.org) or a GitHub
+[email](mailto:jans@yahooinc.com) or a GitHub
 issue or, better yet, a pull request with a fix.
 
 

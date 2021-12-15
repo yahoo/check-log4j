@@ -33,8 +33,6 @@ Please see the [manual
 page](./doc/check-log4j.1.txt) for full
 details.
 
--[@jschauma](https://twitter.com/jschauma)
-
 Installation
 ============
 

@@ -45,7 +45,6 @@ MINOR_MINIMUM="16"
 # log4j2.enableJndi=true.
 KNOWN_DISABLED="log4j-core-${MAJOR_WANTED}.${MINOR_MINIMUM}"
 FATAL_SETTING="-Dlog4j2.enableJndi=true"
-META_INF="META-INF/maven/org.apache.logging.log4j/log4j-api/pom.xml"
 
 _TMPDIR=""
 CHECK_JARS=""
@@ -53,7 +52,7 @@ ENV_VAR_SET="no"
 FIX="no"
 FIXED=""
 PROGNAME="${0##*/}"
-VERSION="1.2"
+VERSION="1.3"
 FOUND_JARS=""
 SEARCH_PATHS=""
 SKIP=""
@@ -86,6 +85,33 @@ checkFilesystem() {
 	verbose "Searching for jars on the filesystem..." 3
 
 	FOUND_JARS="${FOUND_JARS} $(find ${SEARCH_PATHS:-/} -type f -name '*.jar' 2>/dev/null || true)"
+}
+
+checkFixedVersion() {
+	local jar="${1}"
+	local ver=""
+	local mgrClass=""
+
+	if [ -z "${UNZIP}" ]; then
+		warn "Unable to check if jar contains a fixed version since unzip(1) is miggin."
+		return
+	fi
+
+	verbose "Checking for fixed classes in '${jar}'..." 6
+
+	set +e
+	mgrClass="$(${UNZIP} -l "${jar}" | awk '/JndiManager.class$/ { print $NF; }')"
+	if [ -n "${mgrClass}" ]; then
+		cdtmp
+
+		${UNZIP} -o -q "${jar}" "${mgrClass}" 2>/dev/null
+		if [ -f "${mgrClass}" ]; then
+			if grep -q 'log4j2.enableJndi' "${mgrClass}" ; then
+				echo "log4j2.enableJndi found"
+			fi
+		fi
+	fi
+	set -e
 }
 
 checkInJar() {
@@ -131,7 +157,7 @@ checkInJar() {
 			msg="${msg} used by process ${pid}"
 		fi
 
-		okVersion="$(checkPomVersion "${jar}")"
+		okVersion="$(checkFixedVersion "${jar}")"
 
 		match="$(echo "${jar}" | sed -n -e "s|.*/\(${KNOWN_DISABLED}[0-9.]*.jar\)$|\1|p")"
 		if [ -n "${match}" -o -n "${okVersion}" ]; then
@@ -193,28 +219,6 @@ checkOnlyGivenJars() {
 	verbose "Checking only given jars..." 1
 	FOUND_JARS="${CHECK_JARS}"
 	checkJars
-}
-
-checkPomVersion() {
-	local jar="${1}"
-	local ver=""
-
-	if [ -z "${UNZIP}" ]; then
-		warn "Unable to check meta manifest since unzip(1) is miggin."
-		return
-	fi
-
-	verbose "Checking for meta manifest and version in '${jar}'..." 6
-
-	cdtmp
-	${UNZIP} -o -q "${jar}" "${META_INF}" 2>/dev/null || true
-	if [ -f "${META_INF}" ]; then
-		ver="$(sed -n -e '/<\/parent>/q' -e '/<artifactId>log4j<\/artifactId>/{n;p;}' "${META_INF}" | \
-		sed -e 's|.*>\([0-9.]*\)<.*|\1|')"
-		if isFixedVersion "${ver}" ; then
-			echo "${ver} ok"
-		fi
-	fi
 }
 
 checkRpms() {

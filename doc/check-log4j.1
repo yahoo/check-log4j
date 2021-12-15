@@ -1,0 +1,144 @@
+.Dd December 15, 2021
+.Dt check-log4j 1
+.Os
+.Sh NAME
+.Nm check-log4j
+.Nd try to determine if a host is vulnerable to log4j CVE-2021-44228
+.Sh SYNOPSIS
+.Nm
+.Op Fl fhv
+.Op Fl j Ar jar
+.Op Fl p Ar path
+.Op Fl s Ar skip
+.Sh DESCRIPTION
+The
+.Nm
+tool attempts to determine whether the host it is
+executed on is vulnerable to the logj4 RCE
+vulnerability identified as CVE-2021-4428.
+.Pp
+Since this vulnerability is in a specific Java class
+that may be inside nested jar,
+.Nm
+may be somewhat intrusive to run and should be
+executed with care and consideration of the system's
+load.
+Please see DETAILS for more information.
+.Sh OPTIONS
+The following options are supported by
+.Nm :
+.Bl -tag -width p_path_
+.It Fl f
+Attempt to apply mitigations for the vulnerability.
+(This requires super-user privileges.)
+.It Fl h
+Print a short help message and exit.
+.It Fl j Ar jar
+Check only this jar, nothing else.
+Can be specified multiple times for multiple jars.
+.It Fl p Ar path
+Limit filesystem traversal to this directory.
+Can be specified multiple times.
+If not specified,
+.Nm
+will default to '/'.
+.It Fl s Ar skip
+Skip the given checks.
+Valid arguments are 'files', 'packages', and
+\'processes'.
+.It Fl v
+Be verbose.
+Can be specified multiple times.
+.El
+.Sh DETAILS
+CVE-2021-4428 describes a possible remote code
+execution (RCE) vulnerability in the popular log4j
+framework.
+Simply causing the vulnerable system to log a
+specifically crafted message can the attacker gain
+command execution and information disclosure
+capabilities.
+This vulnerability relies on an insecure default
+setting applying to the Java Naming and Directory
+Interface (JNDI).
+.Pp
+Specifically, a system that contains the
+JndiLookup.class may enable the attack path in
+question.
+.Pp
+To determine whether a host is vulnerable, the
+.Nm
+tool will perform the following checks:
+.Bl -bullet -compact
+.It
+check for the existence of likely vulnerable packages
+.It
+check for the existence of java processes using the
+\'JndiLookup' class
+.El
+.Pp
+The discovery process may include running
+.Xr find 1 ,
+.Xr lsof 1 ,
+or
+.Xr rpm 1 ;
+please use the
+.Fl s
+flag to skip any checks that might have a negative
+impact on your host.
+.Pp
+The output of the command attempts to be human
+readable and provide sufficient information to judge
+whether the host requires attention.
+.Sh EXAMPLES
+Sample invocation on a non-vulnerable host:
+.Bd -literal -offset indent
+$ check-log4j
+No obvious indicators of vulnerability found.
+$
+.Ed
+.Pp
+Sample invocation only looking at processes
+.Bd -literal -offset indent
+$ ./check-log4j.sh -s files -s packages -v -v
+=> Running all checks...
+==> Skipping package check.
+==> Looking for jars...
+==> Skipping files check.
+==> Checking all found jars...
+check-log4j.sh 1.0 localhost: Possibly vulnerable jar 'BOOT-INF/lib/log4j-core-2.14.1.jar' (inside of /home/jans/log4shell-vulnerable-app-0.0.1-SNAPSHOT.jar) used by process 15569.
+
+$
+.Ed
+.Pp
+Sample invocation searching only /var and /usr/local/lib
+and skipping package and process checks:
+.Bd -literal -offset indent
+$ check-log4j -p /var -p /usr/local/lib -s packages -s processes
+Possibly vulnerable jar '/usr/local/lib/jars/log4j-core-2.15.0.jar'.
+Possibly vulnerable jar '/usr/local/lib/jars/log4j-core-2.15.jar'.
+Possibly vulnerable jar '/usr/local/lib/jars/log4j-core-2.jar'.
+Possibly vulnerable jar '/usr/local/lib/jars/log4j-core.jar'.
+
+$
+.Ed
+.Pp
+Note version comparisons are only done for packages,
+which is why the above output incudes files ending in
+a seemingly non-vulnerable version.
+.Sh EXIT STATUS
+.Nm
+will return 0 if the host was found not to be
+vulnerable and greater than 0 otherwise.
+.Sh SEE ALSO
+.Xr find 1 ,
+.Xr lsof 1 ,
+.Xr rpm 1
+.Sh HISTORY
+.Nm
+was originally written by
+.An Jan Schaumann
+.Aq jans@yahooinc.com
+in December 2021.
+.Sh BUGS
+Please file bugs and feature requests by emailing the author.

@@ -1,82 +1,5 @@
-check-log4j
-===========
+check-log4j(1)		NetBSD General Commands Manual		check-log4j(1)
 
-This tool will try to determine if the host it is
-running on is likely vulnerable to the latest reason
-that [the internet is on
-fire](https://istheinternetonfire.com): the [log4j
-RCE](https://logging.apache.org/log4j/2.x/security.html)
-[CVE‐2021‐44228](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-44228).
-
-This is different from other tools that attempt to
-verify whether a specific service is vulnerable by
-triggering the exploit and e.g., tracking pingbacks on
-a DNS canary token.  That approach tells you whether a
-_service_ is vulnerable, but it doesn't even tell you
-which _specific systems_: the payload may have been
-proxied on to another system and from there logged via
-`log4j` on yet another one.  So inspection of the
-service does not tell you that that specific host is
-vulnerable.
-
-On the other hand, host owners may not know whether
-they have a vulnerable version of `log4j` on their
-system: The `log4j` package may be pulled in as a
-dependency by various packages, or included inside a
-Java application jar.
-
-The `check-log4j` tool attempts to give host owners a
-tool to determine likely vulnerability by looking at
-running java processes and inside of any jars found.
-
-Please see the [manual
-page](./doc/check-log4j.1.txt) for full
-details.
-
--[@jschauma](https://twitter.com/jschauma)
-
-Installation
-============
-
-To install the command and manual page somewhere
-convenient, run `make install`; the Makefile defaults
-to '/usr/local' but you can change the PREFIX:
-
-```
-$ make PREFIX=~ install
-```
-
-FAQ
-===
-
-## Dude, this is a shell script. You suck. Why isn't this written in $MyFavoriteLanguage?
-
-`check-log4j` is intended to run on any Unix-like
-system without depending on any particular language
-runtime.  It's not pretty, but hey.
-
-## Why does it say "Possibly vulnerable"?
-
-Actual vulnerability depends on runtime configuration.
-`check-log4j` basically checks whether
-`JndiLookup.class` found in any jars.  If so, the
-system becomes suspect.  If `check-log4j` can
-determine that this might be a `log4j-2.16.x` version,
-it will remain silent, but otherwise, it simply
-doesn't know whether that class might be used or just
-sits there as an unused dependency or what.
-
-## This doesn't work on my system, explodes in some way, or doesn't correctly detect a vulnerable host!
-
-I'm sorry.  Please let me know about this via
-[email](mailto:jschauma@netmeister.org) or a GitHub
-issue or, better yet, a pull request with a fix.
-
-
-Documentation
-=============
-
-```
 NAME
      check-log4j -- try to determine if a host is vulnerable to log4j
      CVE-2021-44228
@@ -184,4 +107,5 @@ HISTORY
 
 BUGS
      Please file bugs and feature requests by emailing the author.
-```
+
+NetBSD 8.0		       December 15, 2021		    NetBSD 8.0

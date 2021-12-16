@@ -16,10 +16,10 @@ install:
 man: doc/${NAME}.1.txt
 
 doc/${NAME}.1.txt: doc/${NAME}.1
-	nroff -man $< | col -b >$@
+	nroff -man $? | col -b >$@
 
 readme: man
 	sed -n -e '/^NAME/!p;//q' README.md >.readme
-	sed -n -e '4,$$p' -e '/emailing/q' doc/${NAME}.1.txt >>.readme
+	sed -n -e '/^NAME/,$$p' -e '/emailing/q' doc/${NAME}.1.txt >>.readme
 	echo '```' >>.readme
 	mv .readme README.md

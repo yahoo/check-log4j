@@ -54,7 +54,7 @@ ENV_VAR_SET="no"
 FIX="no"
 FIXED=""
 PROGNAME="${0##*/}"
-VERSION="1.4"
+VERSION="1.5"
 FOUND_JARS=""
 SEARCH_PATHS=""
 SKIP=""
@@ -89,9 +89,9 @@ checkFilesystem() {
 		return
 	fi
 
-	verbose "Searching for jars on the filesystem..." 3
+	verbose "Searching for jars and wars on the filesystem..." 3
 
-	FOUND_JARS="${FOUND_JARS} $(find ${SEARCH_PATHS:-/} -type f -name '*.jar' 2>/dev/null || true)"
+	FOUND_JARS="${FOUND_JARS} $(find ${SEARCH_PATHS:-/} -type f -name '*.[jw]ar' 2>/dev/null || true)"
 
 	verbose "Searching for ${FATAL_CLASS} on the filesystem..." 3
 	classes="$(find ${SEARCH_PATHS:-/} -type f -name "${FATAL_CLASS}" 2>/dev/null || true)"
@@ -113,11 +113,11 @@ checkFixedVersion() {
 	local dir=""
 
 	set +e
-	if [ x"${suffix}" = "jar" ]; then
-	if [ -z "${UNZIP}" ]; then
-		warn "Unable to check if jar contains a fixed version since unzip(1) is miggin."
-		return
-	fi
+	if [ x"${suffix}" = "jar" -o x"${suffix}" = "war" ]; then
+		if [ -z "${UNZIP}" ]; then
+			warn "Unable to check if ${suffix} contains a fixed version since unzip(1) is miggin."
+			return
+		fi
 		verbose "Checking for fixed classes in '${file}'..." 6
 
 		mgrClass="$(${UNZIP} -l "${file}" | awk '/JndiManager.class$/ { print $NF; }')"
@@ -153,7 +153,7 @@ checkInJar() {
 	local thisJar="${parent:+${parent}:}${jar}"
 	for j in $(echo "${SEEN_JARS}" | tr ' ' '\n'); do
 		if [ x"${j}" = x"${thisJar}" ]; then
-			verbose "Skipping already seen jar '${thisJar}'..." 6
+			verbose "Skipping already seen archive '${thisJar}'..." 6
 			return
 		fi
 	done
@@ -187,13 +187,13 @@ checkInJar() {
 		match="$(echo "${jar}" | sed -n -e "s|.*/\(${KNOWN_DISABLED}[0-9.]*.jar\)$|\1|p")"
 		if [ -n "${match}" -o -n "${okVersion}" ]; then
 			if [ -n "${flags}" ]; then
-				log "Normally non-vulnerable jar '${jar}'${msg} found, but ${flags}!"
+				log "Normally non-vulnerable archive '${jar}'${msg} found, but ${flags}!"
 			fi
-			verbose "Allowing jar with known disabled JNDI Lookup." 6
+			verbose "Allowing archive with known disabled JNDI Lookup." 6
 			return
 		fi
 		if [ -z "${flags}" ]; then
-			log "Possibly vulnerable jar '${jar}'${msg}."
+			log "Possibly vulnerable archive '${jar}'${msg}."
 		fi
 		SUSPECT_JARS="${SUSPECT_JARS} ${thisJar}"
 	fi
@@ -210,7 +210,7 @@ checkJars() {
 		return
 	fi
 
-	verbose "Checking all found jars..." 2
+	verbose "Checking all found jars and wars..." 2
 
 	FOUND_JARS=$(echo "${FOUND_JARS}" | tr ' ' '\n')
 	oIFS="${IFS}"
@@ -224,7 +224,7 @@ checkJars() {
 		jar="${found#*--}"
 
 		if [ -n "${UNZIP}" ]; then
-			jarjar="$(${UNZIP} -l "${jar}" | awk '/^ .*log4j.*jar$/ { print $NF; }')"
+			jarjar="$(${UNZIP} -l "${jar}" | awk '/^ .*log4j.*[jw]ar$/ { print $NF; }')"
 			if [ -n "${jarjar}" ]; then
 				extractAndInspect "${jar}" "${jarjar}" ${pid}
 			fi
@@ -290,9 +290,9 @@ checkProcesses() {
 	verbose "Checking running processes..." 3
 	local lsof="$(which lsof 2>/dev/null || true)"
 	if [ -z "${lsof}" ]; then
-		FOUND_JARS="${FOUND_JARS} $(ps -o pid,command= -wwwax | awk '/jar$/ { print $1 "--" $NF; }' | uniq)"
+		FOUND_JARS="${FOUND_JARS} $(ps -o pid,command= -wwwax | awk '/[jw]ar$/ { print $1 "--" $NF; }' | uniq)"
 	else
-		FOUND_JARS="${FOUND_JARS} $(${lsof} -c java | awk '/REG.*jar$/ { print $2 "--" $NF; }' | uniq)"
+		FOUND_JARS="${FOUND_JARS} $(${lsof} -c java | awk '/REG.*[jw]ar$/ { print $2 "--" $NF; }' | uniq)"
 	fi
 }
 
@@ -328,7 +328,7 @@ fixJars() {
 	local jar
 
 	for jar in ${SUSPECT_JARS}; do
-		if expr "${jar}" : ".*jar:" >/dev/null; then
+		if expr "${jar}" : ".*[jw]ar:" >/dev/null; then
 			warn "Unable to fix '${jar} -- it's a jar inside another jar."
 			continue
 		fi
@@ -414,7 +414,7 @@ verdict() {
 	fi
 
 	if [ -n "${SUSPECT_JARS}" -a x"${FIX}" = x"yes" ]; then
-		echo "The following jars were found to include '${FATAL_CLASS}':"
+		echo "The following archives were found to include '${FATAL_CLASS}':"
 		echo "${SUSPECT_JARS# *}" | tr ' ' '\n'
 		echo
 
@@ -423,7 +423,7 @@ verdict() {
 			echo "Backup copies of the following are left on the system:"
 			echo "${FIXED}"
 			echo
-			echo "Remember to restart any services using those jars."
+			echo "Remember to restart any services using these."
 			echo
 		else
 			echo "Looks like I was unable to do that, though."

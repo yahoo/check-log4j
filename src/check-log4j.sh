@@ -23,6 +23,7 @@
 # See the License for the specific language governing
 # permissions and limitations under the License.
 
+
 set -eu
 
 umask 077
@@ -45,6 +46,7 @@ MINOR_MINIMUM="16"
 # log4j2.enableJndi=true.
 KNOWN_DISABLED="log4j-core-${MAJOR_WANTED}.${MINOR_MINIMUM}"
 FATAL_SETTING="-Dlog4j2.enableJndi=true"
+FATAL_CLASS="JndiLookup.class"
 
 _TMPDIR=""
 CHECK_JARS=""
@@ -52,11 +54,12 @@ ENV_VAR_SET="no"
 FIX="no"
 FIXED=""
 PROGNAME="${0##*/}"
-VERSION="1.3"
+VERSION="1.4"
 FOUND_JARS=""
 SEARCH_PATHS=""
 SKIP=""
 SEEN_JARS=""
+SUSPECT_CLASSES=""
 SUSPECT_JARS=""
 SUSPECT_PACKAGES=""
 UNZIP="$(which unzip 2>/dev/null || true)"
@@ -77,6 +80,10 @@ cdtmp() {
 }
 
 checkFilesystem() {
+	local class=""
+	local classes=""
+	local okVersion=""
+
 	if expr "${SKIP}" : ".*files" >/dev/null; then
 		verbose "Skipping files check." 2
 		return
@@ -85,32 +92,50 @@ checkFilesystem() {
 	verbose "Searching for jars on the filesystem..." 3
 
 	FOUND_JARS="${FOUND_JARS} $(find ${SEARCH_PATHS:-/} -type f -name '*.jar' 2>/dev/null || true)"
+
+	verbose "Searching for ${FATAL_CLASS} on the filesystem..." 3
+	classes="$(find ${SEARCH_PATHS:-/} -type f -name "${FATAL_CLASS}" 2>/dev/null || true)"
+
+	for class in ${classes}; do
+		okVersion="$(checkFixedVersion "${class}")"
+		if [ -z "${okVersion}" ]; then
+			SUSPECT_CLASSES="${SUSPECT_CLASSES} ${class}"
+			log "Possibly vulnerable class '${class}'."
+		fi
+	done
 }
 
 checkFixedVersion() {
-	local jar="${1}"
+	local file="${1}"
 	local ver=""
 	local mgrClass=""
+	local suffix="${file##*.}"
+	local dir=""
 
+	set +e
+	if [ x"${suffix}" = "jar" ]; then
 	if [ -z "${UNZIP}" ]; then
 		warn "Unable to check if jar contains a fixed version since unzip(1) is miggin."
 		return
 	fi
+		verbose "Checking for fixed classes in '${file}'..." 6
 
-	verbose "Checking for fixed classes in '${jar}'..." 6
-
-	set +e
-	mgrClass="$(${UNZIP} -l "${jar}" | awk '/JndiManager.class$/ { print $NF; }')"
+		mgrClass="$(${UNZIP} -l "${file}" | awk '/JndiManager.class$/ { print $NF; }')"
 	if [ -n "${mgrClass}" ]; then
 		cdtmp
+			${UNZIP} -o -q "${file}" "${mgrClass}" 2>/dev/null
+		fi
+	elif [ x"${suffix}" = "class" ]; then
+		# If we find the fatal class outside of a jar, let's guess that
+		# there might be an accompanying JndiManager.class nearby...
+		mgrClass="${file%/*}/../net/JndiManager.class"
+	fi
 
-		${UNZIP} -o -q "${jar}" "${mgrClass}" 2>/dev/null
 		if [ -f "${mgrClass}" ]; then
 			if grep -q 'log4j2.enableJndi' "${mgrClass}" ; then
 				echo "log4j2.enableJndi found"
 			fi
 		fi
-	fi
 	set -e
 }
 
@@ -205,7 +230,7 @@ checkJars() {
 			fi
 		fi
 
-		checkInJar "${jar}" JndiLookup.class ${pid}
+		checkInJar "${jar}" "${FATAL_CLASS}" "${pid}"
 	done
 	IFS="${oIFS}"
 	FOUND_JARS="$(echo "${FOUND_JARS}" | tr ' ' '\n')"
@@ -288,7 +313,7 @@ extractAndInspect() {
 	cdtmp
 	unzip -o -q "${jar}" ${jarjar}
 	for f in ${jarjar}; do
-		checkInJar "${f}" "JndiLookup.class" ${pid} "${jar}"
+		checkInJar "${f}" "${FATAL_CLASS}" ${pid} "${jar}"
 	done
 }
 
@@ -310,7 +335,7 @@ fixJars() {
 
 		verbose "Fixing ${jar}..." 4
 		cp "${jar}" "${jar}.bak" && \
-			zip -q -d "${jar}" org/apache/logging/log4j/core/lookup/JndiLookup.class && \
+			zip -q -d "${jar}" org/apache/logging/log4j/core/lookup/${FATAL_CLASS} && \
 			FIXED="${FIXED} ${jar}.bak"
 	done
 }
@@ -383,13 +408,13 @@ verbose() {
 verdict() {
 	local pkg found
 
-	if [ -z "${SUSPECT_JARS}" -a -z "${SUSPECT_PACKAGES}" ]; then
+	if [ -z "${SUSPECT_JARS}" -a -z "${SUSPECT_PACKAGES}" -a -z "${SUSPECT_CLASSES}" ]; then
 		log "No obvious indicators of vulnerability found."
 		exit 0
 	fi
 
 	if [ -n "${SUSPECT_JARS}" -a x"${FIX}" = x"yes" ]; then
-		echo "The following jars were found to include 'JndiLookup.class':"
+		echo "The following jars were found to include '${FATAL_CLASS}':"
 		echo "${SUSPECT_JARS# *}" | tr ' ' '\n'
 		echo
 

@@ -458,7 +458,7 @@ while getopts 'fhj:s:p:v' opt; do
 			# NOTREACHED
 		;;
 		j)
-			f="$(cd "${OPTARG%/*}" && pwd)/${OPTARG##*/})"
+			f="$(cd "${OPTARG%/*}" && pwd)/${OPTARG##*/}"
 			CHECK_JARS="${CHECK_JARS:+${CHECK_JARS} }${f}"
 		;;
 		p)

@@ -25,6 +25,7 @@
 
 
 set -eu
+IFS="$(printf '\n\t')"
 
 umask 077
 
@@ -83,24 +84,25 @@ checkFilesystem() {
 	local class=""
 	local classes=""
 	local okVersion=""
+	local newjars=""
 
 	if expr "${SKIP}" : ".*files" >/dev/null; then
 		verbose "Skipping files check." 2
 		return
 	fi
 
-	verbose "Searching for jars and wars on the filesystem..." 3
-
-	FOUND_JARS="${FOUND_JARS} $(find ${SEARCH_PATHS:-/} -type f -name '*.[jw]ar' 2>/dev/null || true)"
+	verbose "Searching for jars/wars on the filesystem..." 3
+	newjars=$(find "${SEARCH_PATHS:-/}" -type f -name '*.[jw]ar' 2>/dev/null || true)
+	FOUND_JARS="${FOUND_JARS:+${FOUND_JARS} }${newjars}"
 
 	verbose "Searching for ${FATAL_CLASS} on the filesystem..." 3
-	classes="$(find ${SEARCH_PATHS:-/} -type f -name "${FATAL_CLASS}" 2>/dev/null || true)"
+	classes=$(find "${SEARCH_PATHS:-/}" -type f -name "${FATAL_CLASS}" 2>/dev/null || true)
 
 	for class in ${classes}; do
 		okVersion="$(checkFixedVersion "${class}")"
 		if [ -z "${okVersion}" ]; then
-			SUSPECT_CLASSES="${SUSPECT_CLASSES} ${class}"
-			log "Possibly vulnerable class '${class}'."
+			log "Possibly vulnerable class ${class}."
+			SUSPECT_CLASSES="${SUSPECT_CLASSES:+${SUSPECT_CLASSES} }${class}"
 		fi
 	done
 }
@@ -113,7 +115,7 @@ checkFixedVersion() {
 	local dir=""
 
 	set +e
-	if [ x"${suffix}" = "jar" -o x"${suffix}" = "war" ]; then
+	if [ x"${suffix}" = x"jar" -o x"${suffix}" = x"war" ]; then
 		if [ -z "${UNZIP}" ]; then
 			warn "Unable to check if ${suffix} contains a fixed version since unzip(1) is miggin."
 			return
@@ -125,7 +127,7 @@ checkFixedVersion() {
 		cdtmp
 			${UNZIP} -o -q "${file}" "${mgrClass}" 2>/dev/null
 		fi
-	elif [ x"${suffix}" = "class" ]; then
+	elif [ x"${suffix}" = x"class" ]; then
 		# If we find the fatal class outside of a jar, let's guess that
 		# there might be an accompanying JndiManager.class nearby...
 		mgrClass="${file%/*}/../net/JndiManager.class"
@@ -157,7 +159,7 @@ checkInJar() {
 			return
 		fi
 	done
-	SEEN_JARS="${SEEN_JARS} ${thisJar}"
+	SEEN_JARS="${SEEN_JARS:+${SEEN_JARS} }${thisJar}"
 
 	verbose "Checking for '${needle}' inside of ${jar}..." 5
 
@@ -212,10 +214,6 @@ checkJars() {
 
 	verbose "Checking all found jars and wars..." 2
 
-	FOUND_JARS=$(echo "${FOUND_JARS}" | tr ' ' '\n')
-	oIFS="${IFS}"
-	IFS="
-"
 	if [ -z "${UNZIP}" ]; then
 		warn "unzip(1) not found, unable to peek into jars inside of jar!"
 	fi
@@ -232,8 +230,6 @@ checkJars() {
 
 		checkInJar "${jar}" "${FATAL_CLASS}" "${pid}"
 	done
-	IFS="${oIFS}"
-	FOUND_JARS="$(echo "${FOUND_JARS}" | tr ' ' '\n')"
 
 	if [ -n "${SUSPECT_JARS}" ]; then
 		echo
@@ -282,6 +278,7 @@ checkPid() {
 }
 
 checkProcesses() {
+	local jars
 	if expr "${SKIP}" : ".*processes" >/dev/null; then
 		verbose "Skipping process check." 2
 		return
@@ -290,10 +287,11 @@ checkProcesses() {
 	verbose "Checking running processes..." 3
 	local lsof="$(which lsof 2>/dev/null || true)"
 	if [ -z "${lsof}" ]; then
-		FOUND_JARS="${FOUND_JARS} $(ps -o pid,command= -wwwax | awk '/[jw]ar$/ { print $1 "--" $NF; }' | uniq)"
+		jars="$(ps -o pid,command= -wwwax | awk '/[jw]ar$/ { print $1 "--" $NF; }' | uniq)"
 	else
-		FOUND_JARS="${FOUND_JARS} $(${lsof} -c java | awk '/REG.*[jw]ar$/ { print $2 "--" $NF; }' | uniq)"
+		jars="$(${lsof} -c java | awk '/REG.*[jw]ar$/ { print $2 "--" $NF; }' | uniq)"
 	fi
+	FOUND_JARS="${FOUND_JARS:+${FOUND_JARS} }${jars}"
 }
 
 cleanup() {
@@ -460,11 +458,11 @@ while getopts 'fhj:s:p:v' opt; do
 			# NOTREACHED
 		;;
 		j)
-			f="$(cd $(dirname "${OPTARG}") && pwd)/$(basename "${OPTARG}")"
-			CHECK_JARS="${CHECK_JARS} ${f}"
+			f="$(cd "${OPTARG%/*}" && pwd)/${OPTARG##*/})"
+			CHECK_JARS="${CHECK_JARS:+${CHECK_JARS} }${f}"
 		;;
 		p)
-			SEARCH_PATHS="${SEARCH_PATHS} $(cd ${OPTARG} && pwd)"
+			SEARCH_PATHS="${SEARCH_PATHS:+${SEARCH_PATHS} }$(cd "${OPTARG}" && pwd)/."
 		;;
 		s)
 			SKIP="${SKIP} ${OPTARG}"

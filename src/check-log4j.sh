@@ -55,7 +55,7 @@ ENV_VAR_SET="no"
 FIX="no"
 FIXED=""
 PROGNAME="${0##*/}"
-VERSION="1.8"
+VERSION="1.9"
 FOUND_JARS=""
 SEARCH_PATHS=""
 SKIP=""
@@ -98,7 +98,7 @@ checkFilesystem() {
 	verbose "Running '${findCmd}'..." 4
 
 	newjars=$(eval ${findCmd} -type f -name '*.[ejw]ar' 2>/dev/null || true)
-	FOUND_JARS="${FOUND_JARS:+${FOUND_JARS} }${newjars}"
+	FOUND_JARS="$(printf "${FOUND_JARS:+${FOUND_JARS}\n}${newjars}")"
 
 	verbose "Searching for ${FATAL_CLASS} on the filesystem..." 3
 	classes=$(eval ${findCmd} -type f -name "${FATAL_CLASS}" 2>/dev/null || true)
@@ -107,7 +107,7 @@ checkFilesystem() {
 		okVersion="$(checkFixedVersion "${class}")"
 		if [ -z "${okVersion}" ]; then
 			log "Possibly vulnerable class ${class}."
-			SUSPECT_CLASSES="${SUSPECT_CLASSES:+${SUSPECT_CLASSES} }${class}"
+			SUSPECT_CLASSES="$(printf "${SUSPECT_CLASSES:+${SUSPECT_CLASSES}\n}${class}")"
 		fi
 	done
 }

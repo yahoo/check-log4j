@@ -5,7 +5,7 @@ NAME
      CVE-2021-44228
 
 SYNOPSIS
-     check-log4j [-fhv] [-j jar] [-p path] [-s skip]
+     check-log4j [-Vfhv] [-j jar] [-p path] [-s skip]
 
 DESCRIPTION
      The check-log4j tool attempts to determine whether the host it is exe-
@@ -19,6 +19,8 @@ DESCRIPTION
 
 OPTIONS
      The following options are supported by check-log4j:
+
+     -V	      Print version number and exit.
 
      -f	      Attempt to apply mitigations for the vulnerability.  (This
 	      requires super-user privileges.)

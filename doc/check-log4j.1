@@ -6,7 +6,7 @@
 .Nd try to determine if a host is vulnerable to log4j CVE-2021-44228
 .Sh SYNOPSIS
 .Nm
-.Op Fl fhv
+.Op Fl Vfhv
 .Op Fl j Ar jar
 .Op Fl p Ar path
 .Op Fl s Ar skip
@@ -28,6 +28,8 @@ Please see DETAILS for more information.
 The following options are supported by
 .Nm :
 .Bl -tag -width p_path_
+.It Fl V
+Print version number and exit.
 .It Fl f
 Attempt to apply mitigations for the vulnerability.
 (This requires super-user privileges.)

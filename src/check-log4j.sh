@@ -55,7 +55,7 @@ ENV_VAR_SET="no"
 FIX="no"
 FIXED=""
 PROGNAME="${0##*/}"
-VERSION="1.7"
+VERSION="1.8"
 FOUND_JARS=""
 SEARCH_PATHS=""
 SKIP=""
@@ -453,8 +453,13 @@ warn() {
 
 trap 'cleanup' 0
 
-while getopts 'fhj:s:p:v' opt; do
+while getopts 'Vfhj:s:p:v' opt; do
 	case "${opt}" in
+		V)
+			echo "${PROGNAME} ${VERSION}"
+			exit 0
+			# NOTREACHED
+		;;
 		f)
 			FIX="yes"
 		;;

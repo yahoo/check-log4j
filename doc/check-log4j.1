@@ -91,6 +91,26 @@ impact on your host.
 The output of the command attempts to be human
 readable and provide sufficient information to judge
 whether the host requires attention.
+.Sh ENVIRONMENT
+The following environment variables influence the
+behavior of
+.Nm :
+.Bl -tag
+.It CHECK_LOG4J_FIND_OPTS_PRE
+Additional options to pass to
+.Xr find 1
+prior to the path name(s).
+.Pp
+By default,
+.Nm
+runs "find / -type f -name '*.[ejw]ar'";
+the contents of this variable are placed immediately
+after the 'find' and before the path name(s).
+.It CHECK_LOG4J_FIND_OPTS_POST
+Additional options to pass to
+.Xr find 1
+immediately after the path name(s).
+.El
 .Sh EXAMPLES
 Sample invocation on a non-vulnerable host:
 .Bd -literal -offset indent
@@ -127,6 +147,22 @@ $
 Note version comparisons are only done for packages,
 which is why the above output incudes files ending in
 a seemingly non-vulnerable version.
+.Pp
+To avoid mountpoint traversal on a Unix system where
+.Xr find 1
+requires the
+.Fl x
+flag to precede the paths:
+.Bd -literal -offset indent
+$ env CHECK_LOG4J_FIND_OPTS_PRE="-x" check-log4j
+No obvious indicators of vulnerability found.
+.Ed
+.Pp
+To only search files newer than '/tmp/foo':
+.Bd -literal -offset indent
+$ env CHECK_LOG4J_FIND_OPTS_POST="-newer /tmp/foo" check-log4j
+No obvious indicators of vulnerability found.
+.Ed
 .Sh EXIT STATUS
 .Nm
 will return 0 if the host was found not to be

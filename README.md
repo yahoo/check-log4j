@@ -138,6 +138,22 @@ DETAILS
      The output of the command attempts to be human readable and provide suf-
      ficient information to judge whether the host requires attention.
 
+ENVIRONMENT
+     The following environment variables influence the behavior of
+     check-log4j:
+
+     CHECK_LOG4J_FIND_OPTS_PRE
+		   Additional options to pass to find(1) prior to the path
+		   name(s).
+
+		   By default, check-log4j runs "find / -type f -name
+		   '*.[ejw]ar'"; the contents of this variable are placed
+		   immediately after the 'find' and before the path name(s).
+
+     CHECK_LOG4J_FIND_OPTS_POST
+		   Additional options to pass to find(1) immediately after the
+		   path name(s).
+
 EXAMPLES
      Sample invocation on a non-vulnerable host:
 
@@ -170,6 +186,17 @@ EXAMPLES
 
      Note version comparisons are only done for packages, which is why the
      above output incudes files ending in a seemingly non-vulnerable version.
+
+     To avoid mountpoint traversal on a Unix system where find(1) requires the
+     -x flag to precede the paths:
+
+	   $ env CHECK_LOG4J_FIND_OPTS_PRE="-x" check-log4j
+	   No obvious indicators of vulnerability found.
+
+     To only search files newer than '/tmp/foo':
+
+	   $ env CHECK_LOG4J_FIND_OPTS_POST="-newer /tmp/foo" check-log4j
+	   No obvious indicators of vulnerability found.
 
 EXIT STATUS
      check-log4j will return 0 if the host was found not to be vulnerable and

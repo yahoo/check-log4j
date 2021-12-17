@@ -55,7 +55,7 @@ ENV_VAR_SET="no"
 FIX="no"
 FIXED=""
 PROGNAME="${0##*/}"
-VERSION="1.6"
+VERSION="1.7"
 FOUND_JARS=""
 SEARCH_PATHS=""
 SKIP=""
@@ -85,6 +85,7 @@ checkFilesystem() {
 	local classes=""
 	local okVersion=""
 	local newjars=""
+	local findCmd=""
 
 	if expr "${SKIP}" : ".*files" >/dev/null; then
 		verbose "Skipping files check." 2
@@ -92,11 +93,15 @@ checkFilesystem() {
 	fi
 
 	verbose "Searching for jars/wars on the filesystem..." 3
-	newjars=$(find "${SEARCH_PATHS:-/}" -type f -name '*.[ejw]ar' 2>/dev/null || true)
+	findCmd=$(echo find ${CHECK_LOG4J_FIND_OPTS_PRE:-""} "${SEARCH_PATHS:-/}" ${CHECK_LOG4J_FIND_OPTS_POST:-""})
+
+	verbose "Running '${findCmd}'..." 4
+
+	newjars=$(eval ${findCmd} -type f -name '*.[ejw]ar' 2>/dev/null || true)
 	FOUND_JARS="${FOUND_JARS:+${FOUND_JARS} }${newjars}"
 
 	verbose "Searching for ${FATAL_CLASS} on the filesystem..." 3
-	classes=$(find "${SEARCH_PATHS:-/}" -type f -name "${FATAL_CLASS}" 2>/dev/null || true)
+	classes=$(eval ${findCmd} -type f -name "${FATAL_CLASS}" 2>/dev/null || true)
 
 	for class in ${classes}; do
 		okVersion="$(checkFixedVersion "${class}")"

@@ -1,4 +1,4 @@
-.Dd December 16, 2021
+.Dd December 17, 2021
 .Dt check-log4j 1
 .Os
 .Sh NAME
@@ -18,7 +18,7 @@ executed on is vulnerable to the logj4 RCE
 vulnerability identified as CVE-2021-4428.
 .Pp
 Since this vulnerability is in a specific Java class
-that may be inside nested JARs or WARs,
+that may be inside nested Java archive files,
 .Nm
 may be somewhat intrusive to run and should be
 executed with care and consideration of the system's
@@ -35,8 +35,8 @@ Attempt to apply mitigations for the vulnerability.
 Print a short help message and exit.
 .It Fl j Ar jar
 Check only this archive, nothing else.
-Can be specified multiple times for multiple JAR or
-WAR files.
+Can be specified multiple times for multiple JAR
+(or other zip formatted archive) files.
 .It Fl p Ar path
 Limit filesystem traversal to this directory.
 Can be specified multiple times.

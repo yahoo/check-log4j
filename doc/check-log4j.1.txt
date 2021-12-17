@@ -13,8 +13,8 @@ DESCRIPTION
      CVE-2021-4428.
 
      Since this vulnerability is in a specific Java class that may be inside
-     nested JARs or WARs, check-log4j may be somewhat intrusive to run and
-     should be executed with care and consideration of the system's load.
+     nested Java archive files, check-log4j may be somewhat intrusive to run
+     and should be executed with care and consideration of the system's load.
      Please see DETAILS for more information.
 
 OPTIONS
@@ -26,7 +26,8 @@ OPTIONS
      -h	      Print a short help message and exit.
 
      -j jar   Check only this archive, nothing else.  Can be specified multi-
-	      ple times for multiple JAR or WAR files.
+	      ple times for multiple JAR (or other zip formatted archive)
+	      files.
 
      -p path  Limit filesystem traversal to this directory.  Can be specified
 	      multiple times.  If not specified, check-log4j will default to
@@ -108,4 +109,4 @@ HISTORY
 BUGS
      Please file bugs and feature requests by emailing the author.
 
-NetBSD 8.0		       December 16, 2021		    NetBSD 8.0
+NetBSD 8.0		       December 17, 2021		    NetBSD 8.0

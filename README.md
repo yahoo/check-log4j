@@ -27,8 +27,8 @@ Java application jar.
 
 The `check-log4j` tool attempts to give host owners a
 tool to determine likely vulnerability by looking at
-running java processes and inside of any JARs or WARs
-found.
+running java processes and inside of any common Java
+archive files found.
 
 Please see the [manual
 page](./doc/check-log4j.1.txt) for full
@@ -58,12 +58,12 @@ runtime.  It's not pretty, but hey.
 
 Actual vulnerability depends on runtime configuration.
 `check-log4j` basically checks whether
-`JndiLookup.class` found in any JARs/WARs.  If so, the
-system becomes suspect.  If `check-log4j` can
+`JndiLookup.class` found in any archive files.  If so,
+the system becomes suspect.  If `check-log4j` can
 determine that this might be a `log4j-2.16.x` version,
 it will remain silent, but otherwise, it simply
-doesn't know whether that class might be used or just
-sits there as an unused dependency or what.
+doesn't know whether that class might be used or
+just sits there as an unused dependency or what.
 
 ## This doesn't work on my system, explodes in some way, or doesn't correctly detect a vulnerable host!
 
@@ -89,8 +89,8 @@ DESCRIPTION
      CVE-2021-4428.
 
      Since this vulnerability is in a specific Java class that may be inside
-     nested JARs or WARs, check-log4j may be somewhat intrusive to run and
-     should be executed with care and consideration of the system's load.
+     nested Java archive files, check-log4j may be somewhat intrusive to run
+     and should be executed with care and consideration of the system's load.
      Please see DETAILS for more information.
 
 OPTIONS
@@ -102,7 +102,8 @@ OPTIONS
      -h	      Print a short help message and exit.
 
      -j jar   Check only this archive, nothing else.  Can be specified multi-
-	      ple times for multiple JAR or WAR files.
+	      ple times for multiple JAR (or other zip formatted archive)
+	      files.
 
      -p path  Limit filesystem traversal to this directory.  Can be specified
 	      multiple times.  If not specified, check-log4j will default to

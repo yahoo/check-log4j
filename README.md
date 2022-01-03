@@ -212,5 +212,6 @@ HISTORY
      in December 2021.
 
 BUGS
-     Please file bugs and feature requests by emailing the author.
+     Please file bugs and feature requests via GitHub pull requests and issues
+     or by emailing the author.
 ```

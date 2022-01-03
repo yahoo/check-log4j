@@ -136,6 +136,7 @@ HISTORY
      in December 2021.
 
 BUGS
-     Please file bugs and feature requests by emailing the author.
+     Please file bugs and feature requests via GitHub pull requests and issues
+     or by emailing the author.
 
-NetBSD 8.0		       December 17, 2021		    NetBSD 8.0
+NetBSD 8.0		       January 03, 2021			    NetBSD 8.0

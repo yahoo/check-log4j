@@ -92,7 +92,7 @@ checkFilesystem() {
 		return
 	fi
 
-	verbose "Searching for jars/wars on the filesystem..." 3
+	verbose "Searching for java archives on the filesystem..." 3
 	findCmd=$(echo find ${CHECK_LOG4J_FIND_OPTS_PRE:-""} "${SEARCH_PATHS:-/}" ${CHECK_LOG4J_FIND_OPTS_POST:-""})
 
 	verbose "Running '${findCmd}'..." 4

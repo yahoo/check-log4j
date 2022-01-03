@@ -5,7 +5,7 @@
 #
 # This script attempts to determine whether the host
 # it runs on is likely to be vulnerable to log4j RCE
-# CVE-2021-44228.
+# CVE-2021-44228 / CVE-2021-45046.
 #
 # Copyright 2021 Yahoo Inc.
 # 
@@ -244,10 +244,6 @@ checkJars() {
 
 		checkInJar "${jar}" "${FATAL_CLASS}" "${pid}"
 	done
-
-	if [ -n "${SUSPECT_JARS}" ]; then
-		echo
-	fi
 }
 
 checkOnlyGivenJars() {
@@ -431,12 +427,9 @@ verbose() {
 verdict() {
 	local pkg found
 
+	echo
 	if [ -z "${SUSPECT_JARS}" -a -z "${SUSPECT_PACKAGES}" -a -z "${SUSPECT_CLASSES}" ]; then
-		log "No obvious indicators of vulnerability found."
-		if [ x"${SHOULD_UPGRADE}" = x"yes" ]; then
-			log "You should still upgrade to version >= ${MAJOR_WANTED}.${MINOR_WANTED}.${TINY_WANTED}, however."
-		fi
-		exit 0
+		log "No obvious indicators of vulnerability to CVE-2021-44228 / CVE-2021-45046 found."
 	fi
 
 	if [ -n "${SUSPECT_JARS}" -a x"${FIX}" = x"yes" ]; then
@@ -450,18 +443,22 @@ verdict() {
 			echo "${FIXED}"
 			echo
 			echo "Remember to restart any services using these."
-			echo
 		else
 			echo "Looks like I was unable to do that, though."
 		fi
-		echo
 	fi
 
 	if [ -n "${SUSPECT_PACKAGES}" ]; then
 		echo "The following packages might still be vulnerable:"
 		echo "${SUSPECT_PACKAGES}"
-		echo
 	fi
+
+	if [ x"${SHOULD_UPGRADE}" = x"yes" ]; then
+		echo "Note: You appear to be using (at least some version of) log4j <= ${MAJOR_WANTED}.${MINOR_WANTED}.${TINY_WANTED}."
+		echo "You should upgrade to that or a later version even if no obvious"
+		echo "vulnerability to CVE-2021-44228 / CVE-2021-45046 was reported."
+	fi
+	echo
 }
 
 warn() {

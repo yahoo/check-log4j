@@ -469,7 +469,11 @@ while getopts 'Vfhj:s:p:v' opt; do
 			# NOTREACHED
 		;;
 		j)
-			f="$(cd "${OPTARG%/*}" && pwd)/${OPTARG##*/}"
+			d="${OPTARG%/*}"
+			if [ x"${d}" = x"${OPTARG}" ]; then
+				d="."
+			fi
+			f="$(cd "${d}" && pwd)/${OPTARG##*/}"
 			CHECK_JARS="${CHECK_JARS:+${CHECK_JARS} }${f}"
 		;;
 		p)

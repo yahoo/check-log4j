@@ -42,6 +42,13 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 MAJOR_WANTED="2"
 MINOR_MINIMUM="16"
 
+# CVE-2021-44832 affects log4j <= 2.17.0, but requires
+# the attacker to control the config change, so really
+# not critical; we still _want_ folks to update,
+# though.
+MINOR_WANTED="17"
+TINY_WANTED="1"
+
 # log4j-2.16.0 _disables_ JNDI lookups, but leaves in
 # place the class, meaning it could be enabled if
 # log4j2.enableJndi=true.
@@ -55,11 +62,12 @@ ENV_VAR_SET="no"
 FIX="no"
 FIXED=""
 PROGNAME="${0##*/}"
-VERSION="1.9"
+VERSION="2.0"
 FOUND_JARS=""
 SEARCH_PATHS=""
 SKIP=""
 SEEN_JARS=""
+SHOULD_UPGRADE="unknown"
 SUSPECT_CLASSES=""
 SUSPECT_JARS=""
 SUSPECT_PACKAGES=""
@@ -350,6 +358,11 @@ isFixedVersion () {
 
 	major="${version%%.*}"  # 2.15.0 => 2
 	minor="${version#*.}"   # 2.15.0 => 15.0
+	tiny="${minor#*.}"     # 15.0 => 0
+
+	# strip off any possible other sub-versions
+	# e.g., 2.15.0.12345
+	tiny="${tiny%%.*}"     # 0.12345 => 0
 	minor="${minor%%.*}"   # 15.0 => 15
 
 	# NaN => unknown
@@ -358,6 +371,12 @@ isFixedVersion () {
 	fi
 	if ! expr "${minor}" : "[0-9]*$" >/dev/null; then
 		return 1
+	fi
+
+	if [ ${major} -lt ${MAJOR_WANTED} ] ||
+		[ ${major} -eq ${MAJOR_WANTED} -a ${minor} -lt ${MINOR_WANTED} ] ||
+		[ ${major} -eq ${MAJOR_WANTED} -a ${minor} -eq ${MINOR_WANTED} -a ${tiny} -lt ${TINY_WANTED} ]; then
+		SHOULD_UPGRADE="yes"
 	fi
 
 	if [ ${major} -lt ${MAJOR_WANTED} -o ${minor} -ge ${MINOR_MINIMUM} ]; then
@@ -414,6 +433,9 @@ verdict() {
 
 	if [ -z "${SUSPECT_JARS}" -a -z "${SUSPECT_PACKAGES}" -a -z "${SUSPECT_CLASSES}" ]; then
 		log "No obvious indicators of vulnerability found."
+		if [ x"${SHOULD_UPGRADE}" = x"yes" ]; then
+			log "You should still upgrade to version >= ${MAJOR_WANTED}.${MINOR_WANTED}.${TINY_WANTED}, however."
+		fi
 		exit 0
 	fi
 

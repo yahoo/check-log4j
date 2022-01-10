@@ -430,6 +430,7 @@ verdict() {
 	echo
 	if [ -z "${SUSPECT_JARS}" -a -z "${SUSPECT_PACKAGES}" -a -z "${SUSPECT_CLASSES}" ]; then
 		log "No obvious indicators of vulnerability to CVE-2021-44228 / CVE-2021-45046 found."
+		exit 0
 	fi
 
 	if [ -n "${SUSPECT_JARS}" -a x"${FIX}" = x"yes" ]; then

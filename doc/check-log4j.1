@@ -1,4 +1,4 @@
-.Dd January 03, 2021
+.Dd January 10, 2021
 .Dt check-log4j 1
 .Os
 .Sh NAME
@@ -168,7 +168,15 @@ No obvious indicators of vulnerability found.
 .Sh EXIT STATUS
 .Nm
 will return 0 if the host was found not to be
-vulnerable and greater than 0 otherwise.
+vulnerable and not in need of any update;
+it will return 1 if a vulnerable jar or package was
+detected.
+.Pp
+If no vulnerability to CVE-2021-44228 / CVE-2021-45046
+was found, but versions below the desired minimum were
+found,
+.Nm
+will return 2.
 .Sh SEE ALSO
 .Xr find 1 ,
 .Xr lsof 1 ,

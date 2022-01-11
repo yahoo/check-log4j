@@ -62,7 +62,7 @@ ENV_VAR_SET="no"
 FIX="no"
 FIXED=""
 PROGNAME="${0##*/}"
-VERSION="2.0"
+VERSION="2.1"
 FOUND_JARS=""
 RETVAL=1
 SEARCH_PATHS=""
@@ -131,10 +131,14 @@ checkFixedVersion() {
 	set +e
 	if [ x"${suffix##*[ejw]}" = x"ar" ]; then
 		if [ -z "${UNZIP}" ]; then
-			warn "Unable to check if ${suffix} contains a fixed version since unzip(1) is miggin."
+			warn "Unable to check if ${suffix} contains a fixed version since unzip(1) is missing."
 			return
 		fi
 		verbose "Checking for fixed classes in '${file}'..." 6
+		if zeroSize "${file}"; then
+			verbose "Skipping zero-size file '${file}'..." 6
+			return
+		fi
 
 		mgrClass="$(${UNZIP} -l "${file}" | awk '/JndiManager.class$/ { print $NF; }')"
 	if [ -n "${mgrClass}" ]; then
@@ -174,6 +178,13 @@ checkInJar() {
 		fi
 	done
 	SEEN_JARS="${SEEN_JARS:+${SEEN_JARS} }${thisJar}"
+
+	if [ -z "${parent}" ]; then
+		if zeroSize "${thisJar}"; then
+			verbose "Skipping zero-size file '${thisJar}'..." 6
+			return
+		fi
+	fi
 
 	verbose "Checking for '${needle}' inside of ${jar}..." 5
 
@@ -237,6 +248,10 @@ checkJars() {
 		jar="${found#*--}"
 
 		if [ -n "${UNZIP}" ]; then
+			if zeroSize "${jar}"; then
+				verbose "Skipping zero-size file '${jar}'..." 3
+				continue
+			fi
 			jarjar="$(${UNZIP} -l "${jar}" | awk '/^ .*log4j.*[ejw]ar$/ { print $NF; }')"
 			if [ -n "${jarjar}" ]; then
 				extractAndInspect "${jar}" "${jarjar}" ${pid}
@@ -300,7 +315,7 @@ checkProcesses() {
 	if [ -z "${lsof}" ]; then
 		jars="$(ps -o pid,command= -wwwax | awk '/[ejw]ar$/ { print $1 "--" $NF; }' | uniq)"
 	else
-		jars="$(${lsof} -c java | awk '/REG.*[ejw]ar$/ { print $2 "--" $NF; }' | uniq)"
+		jars="$(${lsof} -c java 2>/dev/null | awk '/REG.*[ejw]ar$/ { print $2 "--" $NF; }' | uniq)"
 	fi
 	FOUND_JARS="${FOUND_JARS:+${FOUND_JARS} }${jars}"
 }
@@ -480,6 +495,19 @@ verdict() {
 warn() {
 	msg="${1}"
 	echo "${LOGPREFIX}: ${msg}" >&2
+}
+
+zeroSize() {
+	local file="${1}"
+	local size
+
+	# stat(1) is not portable :-/
+	size="$(ls -l "${file}" | awk '{print $5}')"
+	if [ x"${size}" = x"0" ]; then
+		return 0
+	fi
+
+	return 1
 }
 
 ###

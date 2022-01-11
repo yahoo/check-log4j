@@ -110,7 +110,7 @@ checkFilesystem() {
 	FOUND_JARS="$(printf "${FOUND_JARS:+${FOUND_JARS}\n}${newjars}")"
 
 	verbose "Searching for ${FATAL_CLASS} on the filesystem..." 3
-	classes=$(eval ${findCmd} -type f -name "${FATAL_CLASS}" 2>/dev/null || true)
+	classes=$(eval ${findCmd} -type f -iname "${FATAL_CLASS}" 2>/dev/null || true)
 
 	for class in ${classes}; do
 		okVersion="$(checkFixedVersion "${class}")"

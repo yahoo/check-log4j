@@ -106,7 +106,7 @@ checkFilesystem() {
 
 	verbose "Running '${findCmd}'..." 4
 
-	newjars=$(eval ${findCmd} -type f -name \'*.[ejw]ar\' 2>/dev/null || true)
+	newjars=$(eval ${findCmd} -type f -iname \'*.[ejw]ar\' 2>/dev/null || true)
 	FOUND_JARS="$(printf "${FOUND_JARS:+${FOUND_JARS}\n}${newjars}")"
 
 	verbose "Searching for ${FATAL_CLASS} on the filesystem..." 3

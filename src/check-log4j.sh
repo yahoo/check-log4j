@@ -72,7 +72,7 @@ SHOULD_UPGRADE="unknown"
 SUSPECT_CLASSES=""
 SUSPECT_JARS=""
 SUSPECT_PACKAGES=""
-UNZIP="$(which unzip 2>/dev/null || true)"
+UNZIP="$(command -v unzip 2>/dev/null || true)"
 VERBOSITY=0
 
 LOGPREFIX="${PROGNAME} ${VERSION} ${HOSTNAME:-"localhost"}"
@@ -276,7 +276,7 @@ checkPackages() {
 
 	verbose "Checking for vulnerable packages..." 2
 
-	if [ x"$(which rpm 2>/dev/null)" != x"" ]; then
+	if [ x"$(command -v rpm 2>/dev/null)" != x"" ]; then
 		checkRpms
 	fi
 }
@@ -296,7 +296,7 @@ checkProcesses() {
 	fi
 
 	verbose "Checking running processes..." 3
-	local lsof="$(which lsof 2>/dev/null || true)"
+	local lsof="$(command -v lsof 2>/dev/null || true)"
 	if [ -z "${lsof}" ]; then
 		jars="$(ps -o pid,command= -wwwax | awk '/[ejw]ar$/ { print $1 "--" $NF; }' | uniq)"
 	else

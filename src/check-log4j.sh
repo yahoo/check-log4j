@@ -441,19 +441,13 @@ verbose() {
 }
 
 verdict() {
-	local spacer
-
-	spacer=""
-
-	echo
 	if [ -z "${SUSPECT_JARS}" -a -z "${SUSPECT_PACKAGES}" -a -z "${SUSPECT_CLASSES}" ]; then
 		log "No obvious indicators of vulnerability to CVE-2021-44228 / CVE-2021-45046 found."
 		RETVAL=0
-		spacer="\n"
 	fi
 
 	if [ -n "${SUSPECT_JARS}" -a x"${FIX}" = x"yes" ]; then
-		printf "${spacer}"
+		echo
 		echo "The following archives were found to include '${FATAL_CLASS}':"
 		echo "${SUSPECT_JARS# *}" | tr ' ' '\n'
 		echo
@@ -468,19 +462,17 @@ verdict() {
 			echo "Looks like I was unable to do that, though."
 			RETVAL=1
 		fi
-		spacer="\n"
 	fi
 
 	if [ -n "${SUSPECT_PACKAGES}" ]; then
-		printf "${spacer}"
+		echo
 		echo "The following packages might still be vulnerable:"
 		echo "${SUSPECT_PACKAGES}"
 		RETVAL=1
-		spacer="\n"
 	fi
 
 	if [ x"${SHOULD_UPGRADE}" = x"yes" ]; then
-		printf "${spacer}"
+		echo
 		echo "Note: You appear to be using (at least some version of) log4j <= ${MAJOR_WANTED}.${MINOR_WANTED}.${TINY_WANTED}."
 		echo "You should upgrade to that or a later version even if no obvious"
 		echo "vulnerability to CVE-2021-44228 / CVE-2021-45046 was reported."
@@ -489,7 +481,6 @@ verdict() {
 			RETVAL=2
 		fi
 	fi
-	echo
 }
 
 warn() {

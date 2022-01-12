@@ -417,12 +417,12 @@ log4jcheck() {
 usage() {
 	cat <<EOH
 Usage: ${PROGNAME} [-fhv] [-j jar] [-s skip] [-p path]
-	-f       attempt to fix the issue by applїing some mitigations
-	-h       print this help and exit
-	-j jar   check only this jar
-        -p path  limit filesystem traversal to this directory
-        -s skip  skip these checks (files, packages, processes)
-	-v       be verbose
+    -f       attempt to fix the issue by applїing some mitigations
+    -h       print this help and exit
+    -j jar   check only this jar
+    -p path  limit filesystem traversal to this directory
+    -s skip  skip these checks (files, packages, processes)
+    -v       be verbose
 EOH
 }
 

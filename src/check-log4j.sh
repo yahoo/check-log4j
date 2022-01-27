@@ -62,7 +62,7 @@ ENV_VAR_SET="no"
 FIX="no"
 FIXED=""
 PROGNAME="${0##*/}"
-VERSION="2.2"
+VERSION="2.3"
 FOUND_JARS=""
 RETVAL=1
 SEARCH_PATHS=""
@@ -140,7 +140,7 @@ checkFixedVersion() {
 			return
 		fi
 
-		mgrClass="$(${UNZIP} -l "${file}" | awk 'tolower($0) ~ /JndiManager.class$/ { print $NF; }')"
+		mgrClass="$(${UNZIP} -l "${file}" | awk 'tolower($0) ~ /jndimanager.class$/ { print $NF; }')"
 	if [ -n "${mgrClass}" ]; then
 		cdtmp
 			${UNZIP} -o -q "${file}" "${mgrClass}" 2>/dev/null
@@ -315,7 +315,7 @@ checkProcesses() {
 	if [ -z "${lsof}" ]; then
 		jars="$(ps -o pid,command= -wwwax | awk 'tolower($0) ~ /[ejw]ar$/ { print $1 "--" $NF; }' | uniq)"
 	else
-		jars="$(${lsof} -c java 2>/dev/null | awk 'tolower($0) ~ /REG.*[ejw]ar$/ { print $2 "--" $NF; }' | uniq)"
+		jars="$(${lsof} -c java 2>/dev/null | awk 'tolower($0) ~ /reg.*[ejw]ar$/ { print $2 "--" $NF; }' | uniq)"
 	fi
 	FOUND_JARS="${FOUND_JARS:+${FOUND_JARS} }${jars}"
 }

@@ -62,7 +62,7 @@ ENV_VAR_SET="no"
 FIX="no"
 FIXED=""
 PROGNAME="${0##*/}"
-VERSION="2.1"
+VERSION="2.2"
 FOUND_JARS=""
 RETVAL=1
 SEARCH_PATHS=""
@@ -140,7 +140,7 @@ checkFixedVersion() {
 			return
 		fi
 
-		mgrClass="$(${UNZIP} -l "${file}" | awk '/JndiManager.class$/ { print $NF; }')"
+		mgrClass="$(${UNZIP} -l "${file}" | awk 'tolower($0) ~ /JndiManager.class$/ { print $NF; }')"
 	if [ -n "${mgrClass}" ]; then
 		cdtmp
 			${UNZIP} -o -q "${file}" "${mgrClass}" 2>/dev/null
@@ -252,7 +252,7 @@ checkJars() {
 				verbose "Skipping zero-size file '${jar}'..." 3
 				continue
 			fi
-			jarjar="$(${UNZIP} -l "${jar}" | awk '/^ .*log4j.*[ejw]ar$/ { print $NF; }')"
+			jarjar="$(${UNZIP} -l "${jar}" | awk 'tolower($0) ~ /^ .*log4j.*[ejw]ar$/ { print $NF; }')"
 			if [ -n "${jarjar}" ]; then
 				extractAndInspect "${jar}" "${jarjar}" ${pid}
 			fi
@@ -313,9 +313,9 @@ checkProcesses() {
 	verbose "Checking running processes..." 3
 	local lsof="$(command -v lsof 2>/dev/null || true)"
 	if [ -z "${lsof}" ]; then
-		jars="$(ps -o pid,command= -wwwax | awk '/[ejw]ar$/ { print $1 "--" $NF; }' | uniq)"
+		jars="$(ps -o pid,command= -wwwax | awk 'tolower($0) ~ /[ejw]ar$/ { print $1 "--" $NF; }' | uniq)"
 	else
-		jars="$(${lsof} -c java 2>/dev/null | awk '/REG.*[ejw]ar$/ { print $2 "--" $NF; }' | uniq)"
+		jars="$(${lsof} -c java 2>/dev/null | awk 'tolower($0) ~ /REG.*[ejw]ar$/ { print $2 "--" $NF; }' | uniq)"
 	fi
 	FOUND_JARS="${FOUND_JARS:+${FOUND_JARS} }${jars}"
 }

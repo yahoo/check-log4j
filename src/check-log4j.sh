@@ -61,9 +61,8 @@ CHECK_JARS=""
 ENV_VAR_SET="no"
 FIX="no"
 FIXED=""
-PROGNAME="${0##*/}"
-VERSION="2.3"
 FOUND_JARS=""
+PROGNAME="${0##*/}"
 RETVAL=1
 SEARCH_PATHS=""
 SKIP=""
@@ -74,6 +73,7 @@ SUSPECT_JARS=""
 SUSPECT_PACKAGES=""
 UNZIP="$(command -v unzip 2>/dev/null || true)"
 VERBOSITY=0
+VERSION="2.4"
 
 LOGPREFIX="${PROGNAME} ${VERSION} ${HOSTNAME:-"localhost"}"
 
@@ -335,10 +335,11 @@ extractAndInspect() {
 	verbose "Extracting ${jar} to look inside jars inside of jars..." 5
 
 	cdtmp
-	unzip -o -q "${jar}" ${jarjar}
+	if ${UNZIP} -o -q "${jar}" ${jarjar}; then
 	for f in ${jarjar}; do
 		checkInJar "${f}" "${FATAL_CLASS}" ${pid} "${jar}"
 	done
+	fi
 }
 
 findJars() {

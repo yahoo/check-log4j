@@ -1,0 +1,62 @@
+Version 3.0 (2022-02-28)
+ * remove '-f' option
+
+Version 2.4 (2022-02-28)
+ * handle corrupt zip files more gracefully
+
+Version 2.3 (2022-01-27)
+ * bug fix to really match all pathnames case-insensitively
+
+Version 2.2 (2022-01-26)
+ * match all pathnames case-insensitively
+
+Version 2.1 (2022-01-11)
+ * suppress warnings from lsof(8)
+ * handle zero-sized files more gracefully
+ * perform case-insensitive search
+ * use 'command -v' instead of which(1)
+
+Version 2.0 (2022-01-03)
+ * still note if we encounter versions <= 2.17.1
+
+Version 1.9 (2021-12-17)
+ * use correct IFS
+
+Version 1.8 (2021-12-17)
+ * add '-V' to report version number
+
+Version 1.7 (2021-12-17)
+ * allow user to pass flags to find(1)
+ * also check EAR files
+
+Version 1.6 (2021-12-16)
+ * correctly detect fixed versions
+ * use full directory names to ensure find(1) traverses symlinks
+
+Version 1.5 (2021-12-16)
+ * also look into WAR files
+
+Version 1.4 (2021-12-15)
+ * detect fatal class even if not inside a jar
+ * first open source version
+
+Version 1.3 (2021-12-15)
+ * better 2.16.0 detection
+ * handle relative directories better
+ * use more portable ps(1) flags
+ * handle given jar files better
+
+Version 1.2 (2021-12-15)
+ * logic error
+
+Version 1.1 (2021-12-15)
+ * if unzip(1) isn't found, try grep(1)
+
+Version 1.0 (2021-12‐15)
+ * first version number introduced
+ * rapid iterations and changes from the initial
+   version pushed to git on 2021-12-13
+
+
+Version 0.1 (2021-12-13)
+ * hello ${jndi:ldap://world/!}

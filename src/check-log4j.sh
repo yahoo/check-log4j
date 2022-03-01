@@ -59,8 +59,6 @@ FATAL_CLASS="JndiLookup.class"
 _TMPDIR=""
 CHECK_JARS=""
 ENV_VAR_SET="no"
-FIX="no"
-FIXED=""
 FOUND_JARS=""
 PROGNAME="${0##*/}"
 RETVAL=1
@@ -73,7 +71,7 @@ SUSPECT_JARS=""
 SUSPECT_PACKAGES=""
 UNZIP="$(command -v unzip 2>/dev/null || true)"
 VERBOSITY=0
-VERSION="2.4"
+VERSION="3.0"
 
 LOGPREFIX="${PROGNAME} ${VERSION} ${HOSTNAME:-"localhost"}"
 
@@ -140,7 +138,7 @@ checkFixedVersion() {
 			return
 		fi
 
-		mgrClass="$(${UNZIP} -l "${file}" | awk 'tolower($0) ~ /jndimanager.class$/ { print $NF; }')"
+		mgrClass="$(${UNZIP} -q -l "${file}" 2>/dev/null | awk 'tolower($0) ~ /jndimanager.class$/ { print $NF; }')"
 	if [ -n "${mgrClass}" ]; then
 		cdtmp
 			${UNZIP} -o -q "${file}" "${mgrClass}" 2>/dev/null
@@ -190,7 +188,7 @@ checkInJar() {
 
 	set +e
 	if [ -n "${UNZIP}" ]; then
-		${UNZIP} -l "${jar}" | grep -q "${needle}"
+		${UNZIP} -q -l "${jar}" 2>/dev/null | grep -q "${needle}"
 	else
 		warn "unzip(1) not found, trying to grep..."
 		grep -q "${needle}" "${jar}"
@@ -252,7 +250,7 @@ checkJars() {
 				verbose "Skipping zero-size file '${jar}'..." 3
 				continue
 			fi
-			jarjar="$(${UNZIP} -l "${jar}" | awk 'tolower($0) ~ /^ .*log4j.*[ejw]ar$/ { print $NF; }')"
+			jarjar="$(${UNZIP} -q -l "${jar}" 2>/dev/null | awk 'tolower($0) ~ /^ .*log4j.*[ejw]ar$/ { print $NF; }')"
 			if [ -n "${jarjar}" ]; then
 				extractAndInspect "${jar}" "${jarjar}" ${pid}
 			fi
@@ -335,7 +333,7 @@ extractAndInspect() {
 	verbose "Extracting ${jar} to look inside jars inside of jars..." 5
 
 	cdtmp
-	if ${UNZIP} -o -q "${jar}" ${jarjar}; then
+	if ${UNZIP} -o -q "${jar}" ${jarjar} 2>/dev/null; then
 	for f in ${jarjar}; do
 		checkInJar "${f}" "${FATAL_CLASS}" ${pid} "${jar}"
 	done
@@ -346,23 +344,6 @@ findJars() {
 	verbose "Looking for jars..." 2
 	checkProcesses
 	checkFilesystem
-}
-
-fixJars() {
-	verbose "Trying to fix suspect jars..." 3
-	local jar
-
-	for jar in ${SUSPECT_JARS}; do
-		if expr "${jar}" : ".*[ejw]ar:" >/dev/null; then
-			warn "Unable to fix '${jar} -- it's a jar inside another jar."
-			continue
-		fi
-
-		verbose "Fixing ${jar}..." 4
-		cp "${jar}" "${jar}.bak" && \
-			zip -q -d "${jar}" org/apache/logging/log4j/core/lookup/${FATAL_CLASS} && \
-			FIXED="${FIXED} ${jar}.bak"
-	done
 }
 
 isFixedVersion () {
@@ -409,10 +390,6 @@ log4jcheck() {
 
 	checkPackages
 	checkJars
-
-	if [ x"${FIX}" = x"yes" ]; then
-		fixJars
-	fi
 }
 
 usage() {
@@ -447,22 +424,10 @@ verdict() {
 		RETVAL=0
 	fi
 
-	if [ -n "${SUSPECT_JARS}" -a x"${FIX}" = x"yes" ]; then
+	if [ -n "${SUSPECT_JARS}" ]; then
 		echo
 		echo "The following archives were found to include '${FATAL_CLASS}':"
 		echo "${SUSPECT_JARS# *}" | tr ' ' '\n'
-		echo
-
-		echo "I tried to fix them by removing that class."
-		if [ -n "${FIXED}" ]; then
-			echo "Backup copies of the following are left on the system:"
-			echo "${FIXED}"
-			echo
-			echo "Remember to restart any services using these."
-		else
-			echo "Looks like I was unable to do that, though."
-			RETVAL=1
-		fi
 	fi
 
 	if [ -n "${SUSPECT_PACKAGES}" ]; then
@@ -508,15 +473,12 @@ zeroSize() {
 
 trap 'cleanup' 0
 
-while getopts 'Vfhj:s:p:v' opt; do
+while getopts 'Vhj:s:p:v' opt; do
 	case "${opt}" in
 		V)
 			echo "${PROGNAME} ${VERSION}"
 			exit 0
 			# NOTREACHED
-		;;
-		f)
-			FIX="yes"
 		;;
 		h\?)
 			usage

@@ -1,4 +1,4 @@
-.Dd January 10, 2021
+.Dd February 28, 2022
 .Dt check-log4j 1
 .Os
 .Sh NAME
@@ -6,7 +6,7 @@
 .Nd try to determine if a host is vulnerable to log4j CVE-2021-44228
 .Sh SYNOPSIS
 .Nm
-.Op Fl Vfhv
+.Op Fl Vhv
 .Op Fl j Ar jar
 .Op Fl p Ar path
 .Op Fl s Ar skip
@@ -30,9 +30,6 @@ The following options are supported by
 .Bl -tag -width p_path_
 .It Fl V
 Print version number and exit.
-.It Fl f
-Attempt to apply mitigations for the vulnerability.
-(This requires super-user privileges.)
 .It Fl h
 Print a short help message and exit.
 .It Fl j Ar jar

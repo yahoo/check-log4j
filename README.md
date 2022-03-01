@@ -81,7 +81,7 @@ NAME
      CVE-2021-44228
 
 SYNOPSIS
-     check-log4j [-Vfhv] [-j jar] [-p path] [-s skip]
+     check-log4j [-Vhv] [-j jar] [-p path] [-s skip]
 
 DESCRIPTION
      The check-log4j tool attempts to determine whether the host it is exe-
@@ -97,9 +97,6 @@ OPTIONS
      The following options are supported by check-log4j:
 
      -V	      Print version number and exit.
-
-     -f	      Attempt to apply mitigations for the vulnerability.  (This
-	      requires super-user privileges.)
 
      -h	      Print a short help message and exit.
 
@@ -202,7 +199,11 @@ EXAMPLES
 
 EXIT STATUS
      check-log4j will return 0 if the host was found not to be vulnerable and
-     greater than 0 otherwise.
+     not in need of any update; it will return 1 if a vulnerable jar or pack-
+     age was detected.
+
+     If no vulnerability to CVE-2021-44228 / CVE-2021-45046 was found, but
+     versions below the desired minimum were found, check-log4j will return 2.
 
 SEE ALSO
      find(1), lsof(1), rpm(1)

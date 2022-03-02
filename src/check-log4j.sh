@@ -394,8 +394,7 @@ log4jcheck() {
 
 usage() {
 	cat <<EOH
-Usage: ${PROGNAME} [-fhv] [-j jar] [-s skip] [-p path]
-	-f       attempt to fix the issue by applїing some mitigations
+Usage: ${PROGNAME} [-hv] [-j jar] [-s skip] [-p path]
 	-h       print this help and exit
 	-j jar   check only this jar
 	-p path  limit filesystem traversal to this directory

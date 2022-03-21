@@ -57,8 +57,8 @@ runtime.  It's not pretty, but hey.
 ## Why does it say "Possibly vulnerable"?
 
 Actual vulnerability depends on runtime configuration.
-`check-log4j` basically checks whether
-`JndiLookup.class` found in any archive files.  If so,
+`check-log4j` basically checks whether the file
+`JndiLookup.class` is found in any archive files.  If so,
 the system becomes suspect.  If `check-log4j` can
 determine that this might be a `log4j-2.16.x` version,
 it will remain silent, but otherwise, it simply

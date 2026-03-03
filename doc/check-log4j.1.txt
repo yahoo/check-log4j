@@ -9,7 +9,7 @@ SYNOPSIS
 
 DESCRIPTION
      The check-log4j tool attempts to determine whether the host it is exe-
-     cuted on is vulnerable to the logj4 RCE vulnerability identified as
+     cuted on is vulnerable to the log4j RCE vulnerability identified as
      CVE-2021-4428.
 
      Since this vulnerability is in a specific Java class that may be inside
